@@ -12,8 +12,8 @@ parser.add_argument('path', help='path to an image to process')
 parser.add_argument('-o', '--out', default='out', help='output directory')
 parser.add_argument('-n', '--number', type=int, default=2,
                     help='number of images to generate')
-parser.add_argument('-m', '--mask', default=False,
-                    type=bool, help='whether to save masks')
+parser.add_argument('-m', '--mask', action="store_true",
+                    help='whether to save masks')
 parser.add_argument('-mo', '--maskout', default='mask',
                     help='mask output directory')
 
