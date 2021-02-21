@@ -82,8 +82,6 @@ def overlay_transparent(background, overlay, x, y):
 if __name__ == '__main__':
     args = parser.parse_args()
     im = cv2.imread(args.path, cv2.IMREAD_UNCHANGED)
-    plt.imshow(cv2.cvtColor(im, cv2.COLOR_BGRA2RGBA))
-    plt.show()
 
     os.makedirs(args.out, exist_ok=True)
     os.makedirs(args.maskout, exist_ok=True)
@@ -95,9 +93,6 @@ if __name__ == '__main__':
         y = random.randrange(max(1, background.shape[0]-cutout.shape[0]))
         added_image, mask = overlay_transparent(background, cutout, x, y)
         added_image = added_image.astype('uint8')
-
-        plt.imshow(cv2.cvtColor(added_image, cv2.COLOR_BGR2RGB))
-        plt.show()
 
         cv2.imwrite(f'{args.out}/{i}.jpg', added_image)
         if args.mask:
