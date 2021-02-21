@@ -9,12 +9,12 @@ import argparse
 parser = argparse.ArgumentParser(
     description='Generating random backgrounds for a given image.')
 parser.add_argument('path', help='path to an image to process')
-parser.add_argument('-o', '--out', default='out', help='output directory')
+parser.add_argument('-o', '--out-dir', default='out', help='output directory')
 parser.add_argument('-n', '--number', type=int, default=2,
                     help='number of images to generate')
 parser.add_argument('-m', '--mask', action="store_true",
                     help='whether to save masks')
-parser.add_argument('-mo', '--maskout', default='mask',
+parser.add_argument('-mo', '--mask-out-dir', default='mask',
                     help='mask output directory')
 
 
@@ -83,8 +83,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     im = cv2.imread(args.path, cv2.IMREAD_UNCHANGED)
 
-    os.makedirs(args.out, exist_ok=True)
-    os.makedirs(args.maskout, exist_ok=True)
+    os.makedirs(args.out_dir, exist_ok=True)
+    os.makedirs(args.mask_out_dir, exist_ok=True)
 
     for i in range(args.number):
         cutout = get_random_cutout(im)
@@ -94,6 +94,6 @@ if __name__ == '__main__':
         added_image, mask = overlay_transparent(background, cutout, x, y)
         added_image = added_image.astype('uint8')
 
-        cv2.imwrite(f'{args.out}/{i}.jpg', added_image)
+        cv2.imwrite(f'{args.out_dir}/{i}.jpg', added_image)
         if args.mask:
-            cv2.imwrite(f'{args.maskout}/{i}.png', mask)
+            cv2.imwrite(f'{args.mask_out_dir}/{i}.png', mask)
