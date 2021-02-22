@@ -15,13 +15,13 @@ parser.add_argument('-n', '--number', type=int, default=2,
                     help='number of images to generate')
 parser.add_argument('-p', '--photos', type=float, default=0.,
                     help='percentage of images to have photographs as background')
-parser.add_argument('-m', '--mask', action="store_true",
+parser.add_argument('-m', '--mask', action='store_true',
                     help='whether to save masks')
 parser.add_argument('-mo', '--mask-out-dir', default='mask',
                     help='mask output directory')
 parser.add_argument('--margin-low', type=float, help='margin low')
 parser.add_argument('--margin-high', type=float, help='margin high')
-parser.add_argument('--margins-equal', action="store_true",
+parser.add_argument('--margins-equal', action='store_true',
                     help='equal margins')
 parser.add_argument('--scale-low', type=float, help='scale low')
 parser.add_argument('--scale-high', type=float, help='scale high')
@@ -128,40 +128,24 @@ class BlurProcessor(Processor):
         return img
 
 
-def get_random_solid_background(im):
+def get_random_solid_background(shape):
     random_color = np.array(colorsys.hsv_to_rgb(
         random(), random(), random()))*255
-    return np.full((im.shape[0], im.shape[1], 3), random_color.astype(np.int32))
+    return np.full((shape[0], shape[1], 3), random_color.astype(np.int32))
 
 
-def get_random_photo_background(im):
-    with urlopen(f"https://picsum.photos/{im.shape[1]}/{im.shape[0]}") as url:
-        image_array = np.asarray(bytearray(url.read()), dtype="uint8")
+def get_random_photo_background(shape):
+    with urlopen(f'https://picsum.photos/{shape[1]}/{shape[0]}') as url:
+        image_array = np.asarray(bytearray(url.read()), dtype='uint8')
         image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
         return image
 
 
 def combine(background, overlay):
-    bg_height, bg_width = background.shape[0], background.shape[1]
-    h, w = overlay.shape[0], overlay.shape[1]
-
-    if w > bg_width:
-        w = bg_width
-        overlay = overlay[:, :w]
-
-    if h > bg_height:
-        h = bg_height
-        overlay = overlay[:h]
-
-    overlay_image = overlay[..., :3]
     mask = overlay[..., 3:] / 255.0
-
-    background[:h, :w] = (1.0 - mask) * \
-        background[:h, :w] + mask * overlay_image
-    full_mask = np.full(background.shape, 0.)
-    full_mask[:h, :w] = mask
-    full_mask *= 255
-    return background.astype('uint8'), full_mask
+    overlay = overlay[..., :3]
+    result = (1.0 - mask) * background + mask * overlay
+    return result.astype('uint8'), mask*255
 
 
 if __name__ == '__main__':
@@ -178,8 +162,9 @@ if __name__ == '__main__':
 
     for i in range(args.number):
         overlay = generator.next()
+        shape = overlay.shape
         background = get_random_solid_background(
-            overlay) if i < solid_bg_number else get_random_photo_background(overlay)
+            shape) if i < solid_bg_number else get_random_photo_background(shape)
         combined_image, mask = combine(background, overlay)
 
         cv2.imwrite(f'{args.out_dir}/{i}.jpg', combined_image)
