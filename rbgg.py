@@ -1,11 +1,11 @@
 import cv2
 import matplotlib.pyplot as plt
-import random
 import numpy as np
 import os
 import argparse
 import colorsys
-import urllib.request
+from random import randint, uniform, random
+from urllib.request import urlopen
 
 parser = argparse.ArgumentParser(
     description='Generating random backgrounds for a given image.')
@@ -47,7 +47,7 @@ def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, mar
             scale_low = scale_high
         if not scale_high:
             scale_high = scale_low
-        scale = random.uniform(scale_low, scale_high)
+        scale = uniform(scale_low, scale_high)
         image = cv2.resize(
             image, (int(image.shape[1]*scale), int(image.shape[0]*scale)))
 
@@ -59,14 +59,14 @@ def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, mar
         if not margin_high:
             margin_high = margin_low
         if margins_equal:
-            margin = random.unform(margin_low/2, margin_high/2)
+            margin = unform(margin_low/2, margin_high/2)
             a, b, c, d = int(margin*image.shape[0]), int(margin*image.shape[0]), int(
                 margin*image.shape[1]), int(margin*image.shape[1])
             image = np.pad(image, ((max(0, a), max(0, b)),
                                    (max(0, c), max(0, d)), (0, 0)))
             image = unpad(image, ((a, b), (c, d), (0, 0)))
         else:
-            def rndm(): return random.uniform(margin_low/2, margin_high/2)
+            def rndm(): return uniform(margin_low/2, margin_high/2)
             a, b, c, d = int(rndm()*image.shape[0]), int(rndm()*image.shape[0]), int(
                 rndm()*image.shape[1]), int(rndm()*image.shape[1])
             image = np.pad(image, ((max(0, a), max(0, b)),
@@ -74,14 +74,14 @@ def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, mar
             image = unpad(image, ((min(0, a), min(0, b)),
                                   (min(0, c), min(0, d)), (0, 0)))
 
-    if random.random() <= blur_probability:
+    if random() <= blur_probability:
         if not blur_high:
             blur_high = blur_low
         if not blur_low:
             blur_low = blur_high
         blur_low, blur_high = int(blur_low*min(
             wm_shape[0], wm_shape[1])), int(blur_high*min(wm_shape[0], wm_shape[1]))
-        blur = random.randint(blur_low, blur_high)
+        blur = randint(blur_low, blur_high)
         image = cv2.blur(image, (blur, blur))
 
     return image
@@ -89,12 +89,12 @@ def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, mar
 
 def get_random_solid_background(im):
     random_color = np.array(colorsys.hsv_to_rgb(
-        random.random(), random.random(), random.random()))*255
+        random(), random(), random()))*255
     return np.full((im.shape[0], im.shape[1], 3), random_color.astype(np.int32))
 
 
 def get_random_photo_background(im):
-    with urllib.request.urlopen(f"https://picsum.photos/{im.shape[1]}/{im.shape[0]}") as url:
+    with urlopen(f"https://picsum.photos/{im.shape[1]}/{im.shape[0]}") as url:
         image_array = np.asarray(bytearray(url.read()), dtype="uint8")
         image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
         return image
