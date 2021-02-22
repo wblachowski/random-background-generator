@@ -90,20 +90,16 @@ def get_random_solid_background(im):
     return np.full((im.shape[0], im.shape[1], 3), random_color.astype(np.int32))
 
 
-def overlay_transparent(background, overlay, x, y):
-    background_width = background.shape[1]
-    background_height = background.shape[0]
-    if x >= background_width or y >= background_height:
-        return background
-
+def overlay_transparent(background, overlay):
+    bg_height, bg_width = background.shape[0], background.shape[1]
     h, w = overlay.shape[0], overlay.shape[1]
 
-    if x + w > background_width:
-        w = background_width - x
+    if w > bg_width:
+        w = bg_width
         overlay = overlay[:, :w]
 
-    if y + h > background_height:
-        h = background_height - y
+    if h > bg_height:
+        h = bg_height
         overlay = overlay[:h]
 
     if overlay.shape[2] < 4:
@@ -119,10 +115,10 @@ def overlay_transparent(background, overlay, x, y):
     overlay_image = overlay[..., :3]
     mask = overlay[..., 3:] / 255.0
 
-    background[y:y+h, x:x+w] = (1.0 - mask) * \
-        background[y:y+h, x:x+w] + mask * overlay_image
+    background[:h, :w] = (1.0 - mask) * \
+        background[:h, :w] + mask * overlay_image
     full_mask = np.full(background.shape, 0.)
-    full_mask[y:y+h, x:x+w] = mask
+    full_mask[:h, :w] = mask
     full_mask *= 255
     return background, full_mask
 
@@ -138,7 +134,7 @@ if __name__ == '__main__':
         cutout = get_random_cutout(im, args.scale_low, args.scale_high,
                                    args.margin_low, args.margin_high, args.margins_equal, args.blur_probability, args.blur_low, args.blur_high)
         background = get_random_solid_background(cutout)
-        added_image, mask = overlay_transparent(background, cutout, 0, 0)
+        added_image, mask = overlay_transparent(background, cutout)
         added_image = added_image.astype('uint8')
 
         cv2.imwrite(f'{args.out_dir}/{i}.jpg', added_image)
