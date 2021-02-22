@@ -24,7 +24,7 @@ parser.add_argument('--scale-low', type=float, help='scale low')
 parser.add_argument('--scale-high', type=float, help='scale high')
 parser.add_argument('--blur-probability', type=float,
                     default=0., help='blur probability')
-parser.add_argument('--blur-strength-low', type=float, default=0.1,
+parser.add_argument('--blur-strength-low', type=float, default=0.05,
                     help='blur strength low')
 parser.add_argument('--blur-strength-high', type=float,
                     help='blur strength high')
@@ -45,7 +45,8 @@ def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, mar
         if not scale_high:
             scale_high = scale_low
         scale = random.uniform(scale_low, scale_high)
-        image = cv2.resize(image, (image.shape[1]*scale, image.shape[0]*scale))
+        image = cv2.resize(
+            image, (int(image.shape[1]*scale), int(image.shape[0]*scale)))
 
     wm_shape = image.shape
 
