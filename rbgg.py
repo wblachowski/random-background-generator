@@ -24,9 +24,9 @@ parser.add_argument('--scale-low', type=float, help='scale low')
 parser.add_argument('--scale-high', type=float, help='scale high')
 parser.add_argument('--blur-probability', type=float,
                     default=0., help='blur probability')
-parser.add_argument('--blur-strength-low', type=float, default=0.05,
+parser.add_argument('--blur-low', type=float, default=0.05,
                     help='blur strength low')
-parser.add_argument('--blur-strength-high', type=float,
+parser.add_argument('--blur-high', type=float,
                     help='blur strength high')
 
 
@@ -38,7 +38,7 @@ def unpad(x, pad_width):
     return x[tuple(slices)]
 
 
-def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, margins_equal, blur_probability, blur_strength_low, blur_strength_high):
+def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, margins_equal, blur_probability, blur_low, blur_high):
     if scale_low or scale_high:
         if not scale_low:
             scale_low = scale_high
@@ -72,13 +72,13 @@ def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, mar
                                   (min(0, c), min(0, d)), (0, 0)))
 
     if random.random() <= blur_probability:
-        if not blur_strength_high:
-            blur_strength_high = blur_strength_low
-        if not blur_strength_low:
-            blur_strength_low = blur_strength_high
-        blur_strength_low, blur_strength_high = int(blur_strength_low*min(
-            wm_shape[0], wm_shape[1])), int(blur_strength_high*min(wm_shape[0], wm_shape[1]))
-        blur = random.randint(blur_strength_low, blur_strength_high)
+        if not blur_high:
+            blur_high = blur_low
+        if not blur_low:
+            blur_low = blur_high
+        blur_low, blur_high = int(blur_low*min(
+            wm_shape[0], wm_shape[1])), int(blur_high*min(wm_shape[0], wm_shape[1]))
+        blur = random.randint(blur_low, blur_high)
         image = cv2.blur(image, (blur, blur))
 
     return image
@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
     for i in range(args.number):
         cutout = get_random_cutout(im, args.scale_low, args.scale_high,
-                                   args.margin_low, args.margin_high, args.margins_equal, args.blur_probability, args.blur_strength_low, args.blur_strength_high)
+                                   args.margin_low, args.margin_high, args.margins_equal, args.blur_probability, args.blur_low, args.blur_high)
         background = get_random_solid_background(cutout)
         added_image, mask = overlay_transparent(background, cutout, 0, 0)
         added_image = added_image.astype('uint8')
