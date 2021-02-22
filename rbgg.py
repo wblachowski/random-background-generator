@@ -24,6 +24,14 @@ parser.add_argument('--scale-low', type=float, help='scale low')
 parser.add_argument('--scale-high', type=float, help='scale high')
 
 
+def unpad(x, pad_width):
+    slices = []
+    for c in pad_width:
+        e = None if c[1] == 0 else c[1]
+        slices.append(slice(-c[0], e))
+    return x[tuple(slices)]
+
+
 def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, margins_equal):
     if scale_low or scale_high:
         if not scale_low:
@@ -39,12 +47,16 @@ def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, mar
             margin_high = margin_low
         if margins_equal:
             margin = random.randint(margin_low, margin_high)
-            print(margin)
-            print(image.shape)
-            image = np.pad(image, ((margin, margin), (margin, margin), (0, 0)))
+            image = np.pad(image, ((max(0, margin), max(0, margin)),
+                                   (max(0, margin), max(0, margin)), (0, 0)))
+            image = unpad(image, ((margin, margin), (margin, margin), (0, 0)))
         else:
             def rndm(): return random.randint(margin_low, margin_high)
-            image = np.pad(image, ((rndm(), rndm()), (rndm(), rndm()), (0, 0)))
+            a, b, c, d = rndm(), rndm(), rndm(), rndm()
+            image = np.pad(image, ((max(0, a), max(0, b)),
+                                   (max(0, c), max(0, d)), (0, 0)))
+            image = unpad(image, ((min(0, a), min(0, b)),
+                                  (min(0, c), min(0, d)), (0, 0)))
 
     # if random.random() > 0.8:
         # blur_rate = max(1, random.randrange(
@@ -105,7 +117,6 @@ if __name__ == '__main__':
     os.makedirs(args.mask_out_dir, exist_ok=True)
 
     for i in range(args.number):
-        print(args.margins_equal)
         cutout = get_random_cutout(im, args.scale_low, args.scale_high,
                                    args.margin_low, args.margin_high, args.margins_equal)
         background = get_random_solid_background(cutout)
