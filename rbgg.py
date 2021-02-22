@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(
     description='Generating random backgrounds for a given image.')
 parser.add_argument('path', help='path to an image to process')
 parser.add_argument('-o', '--out-dir', default='out', help='output directory')
-parser.add_argument('-n', '--number', type=int, default=2,
+parser.add_argument('-n', '--number', type=int, default=100,
                     help='number of images to generate')
 parser.add_argument('-p', '--photos', type=float, default=0.,
                     help='percentage of images to have photographs as background')
