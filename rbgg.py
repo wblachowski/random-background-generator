@@ -22,6 +22,11 @@ parser.add_argument('--margins-equal', action="store_true",
                     help='equal margins')
 parser.add_argument('--scale-low', type=float, help='scale low')
 parser.add_argument('--scale-high', type=float, help='scale high')
+parser.add_argument('--blur-probability', type=float, help='blur probability')
+parser.add_argument('--blur-strength-low', type=float, default=0.1,
+                    help='blur strength low')
+parser.add_argument('--blur-strength-high', type=float,
+                    help='blur strength high')
 
 
 def unpad(x, pad_width):
@@ -32,7 +37,7 @@ def unpad(x, pad_width):
     return x[tuple(slices)]
 
 
-def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, margins_equal):
+def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, margins_equal, blur_probability, blur_strength_low, blur_strength_high):
     if scale_low or scale_high:
         if not scale_low:
             scale_low = scale_high
@@ -40,6 +45,8 @@ def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, mar
             scale_high = scale_low
         scale = random.uniform(scale_low, scale_high)
         image = cv2.resize(image, (image.shape[1]*scale, image.shape[0]*scale))
+
+    wm_shape = image.shape
 
     if margin_low or margin_high:
         if not margin_low:
@@ -62,10 +69,16 @@ def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, mar
             image = unpad(image, ((min(0, a), min(0, b)),
                                   (min(0, c), min(0, d)), (0, 0)))
 
-    # if random.random() > 0.8:
-        # blur_rate = max(1, random.randrange(
-        # min(cutout.shape[0], cutout.shape[1])//15))
-        # cutout = cv2.blur(cutout, (blur_rate, blur_rate))
+    if blur_probability and random.random() <= blur_probability:
+        if not blur_strength_high:
+            blur_strength_high = blur_strength_low
+        if not blur_strength_low:
+            blur_strength_low = blur_strength_high
+        blur_strength_low, blur_strength_high = int(blur_strength_low*min(
+            wm_shape[0], wm_shape[1])), int(blur_strength_high*min(wm_shape[0], wm_shape[1]))
+        blur = random.randint(blur_strength_low, blur_strength_high)
+        image = cv2.blur(image, (blur, blur))
+
     return image
 
 
@@ -73,7 +86,6 @@ def get_random_solid_background(im):
     random_color = [random.randrange(
         256), random.randrange(256), random.randrange(256)]
     return np.full((im.shape[0], im.shape[1], 3), random_color)
-    # return np.full((im.shape[0]+random.randrange(-im.shape[0]//4, im.shape[0]//3), im.shape[1]+random.randrange(-im.shape[1]//4, im.shape[1]//3), 3), random_color)
 
 
 def overlay_transparent(background, overlay, x, y):
@@ -122,10 +134,8 @@ if __name__ == '__main__':
 
     for i in range(args.number):
         cutout = get_random_cutout(im, args.scale_low, args.scale_high,
-                                   args.margin_low, args.margin_high, args.margins_equal)
+                                   args.margin_low, args.margin_high, args.margins_equal, args.blur_probability, args.blur_strength_low, args.blur_strength_high)
         background = get_random_solid_background(cutout)
-        # x = random.randrange(max(1, background.shape[1]-cutout.shape[1]))
-        # y = random.randrange(max(1, background.shape[0]-cutout.shape[0]))
         added_image, mask = overlay_transparent(background, cutout, 0, 0)
         added_image = added_image.astype('uint8')
 
