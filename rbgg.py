@@ -22,7 +22,8 @@ parser.add_argument('--margins-equal', action="store_true",
                     help='equal margins')
 parser.add_argument('--scale-low', type=float, help='scale low')
 parser.add_argument('--scale-high', type=float, help='scale high')
-parser.add_argument('--blur-probability', type=float, help='blur probability')
+parser.add_argument('--blur-probability', type=float,
+                    default=0., help='blur probability')
 parser.add_argument('--blur-strength-low', type=float, default=0.1,
                     help='blur strength low')
 parser.add_argument('--blur-strength-high', type=float,
@@ -69,7 +70,7 @@ def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, mar
             image = unpad(image, ((min(0, a), min(0, b)),
                                   (min(0, c), min(0, d)), (0, 0)))
 
-    if blur_probability and random.random() <= blur_probability:
+    if random.random() <= blur_probability:
         if not blur_strength_high:
             blur_strength_high = blur_strength_low
         if not blur_strength_low:
