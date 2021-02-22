@@ -33,58 +33,99 @@ parser.add_argument('--blur-high', type=float,
                     help='blur strength high')
 
 
-def unpad(x, pad_width):
-    slices = []
-    for c in pad_width:
-        e = None if c[1] == 0 else c[1]
-        slices.append(slice(-c[0], e))
-    return x[tuple(slices)]
+class ImagePermutationGenerator:
+    def __init__(self, img, args):
+        self.img = img
+        self.scale_processor = ScaleProcessor(args)
+        self.margin_processor = MarginProcessor(args)
+        self.blur_processor = BlurProcessor(args)
+
+    def next(self):
+        img = self.img.copy()
+        shape_after_scaling = img.shape
+        if self.scale_processor.should_process():
+            img = self.scale_processor.process(img)
+            shape_after_scaling = img.shape
+        if self.margin_processor.should_process():
+            img = self.margin_processor.process(img)
+        if self.blur_processor.should_process():
+            img = self.blur_processor.process(img, shape_after_scaling)
+        return img
 
 
-def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, margins_equal, blur_probability, blur_low, blur_high):
-    if scale_low or scale_high:
-        if not scale_low:
-            scale_low = scale_high
-        if not scale_high:
-            scale_high = scale_low
-        scale = uniform(scale_low, scale_high)
-        image = cv2.resize(
-            image, (int(image.shape[1]*scale), int(image.shape[0]*scale)))
+class Processor:
+    def should_process(self):
+        return self.low is not None or self.high is not None
 
-    wm_shape = image.shape
 
-    if margin_low or margin_high:
-        if not margin_low:
-            margin_low = margin_high
-        if not margin_high:
-            margin_high = margin_low
-        if margins_equal:
-            margin = unform(margin_low/2, margin_high/2)
-            a, b, c, d = int(margin*image.shape[0]), int(margin*image.shape[0]), int(
-                margin*image.shape[1]), int(margin*image.shape[1])
-            image = np.pad(image, ((max(0, a), max(0, b)),
-                                   (max(0, c), max(0, d)), (0, 0)))
-            image = unpad(image, ((a, b), (c, d), (0, 0)))
+class ScaleProcessor(Processor):
+    def __init__(self, args):
+        self.low = args.scale_low
+        self.high = args.scale_high
+        if not self.low:
+            self.low = self.high
+        if not self.high:
+            self.high = self.low
+
+    def process(self, img):
+        scale = uniform(self.low, self.high)
+        return cv2.resize(img, (int(img.shape[1]*scale), int(img.shape[0]*scale)))
+
+
+class MarginProcessor(Processor):
+    def __init__(self, args):
+        self.low = args.margin_low
+        self.high = args.margin_high
+        if not self.low:
+            self.low = self.high
+        if not self.high:
+            self.high = self.low
+        self.equal = args.margins_equal
+
+    def process(self, img):
+        if(self.equal):
+            margin = unform(self.low/2, self.high/2)
+            a, b, c, d = int(margin*img.shape[0]), int(margin*img.shape[0]), int(
+                margin*img.shape[1]), int(margin*img.shape[1])
+            img = np.pad(img, ((max(0, a), max(0, b)),
+                               (max(0, c), max(0, d)), (0, 0)))
+            img = MarginProcessor.unpad(img, ((a, b), (c, d), (0, 0)))
         else:
-            def rndm(): return uniform(margin_low/2, margin_high/2)
-            a, b, c, d = int(rndm()*image.shape[0]), int(rndm()*image.shape[0]), int(
-                rndm()*image.shape[1]), int(rndm()*image.shape[1])
-            image = np.pad(image, ((max(0, a), max(0, b)),
-                                   (max(0, c), max(0, d)), (0, 0)))
-            image = unpad(image, ((min(0, a), min(0, b)),
-                                  (min(0, c), min(0, d)), (0, 0)))
+            def rndm(): return uniform(self.low/2, self.high/2)
+            a, b, c, d = int(rndm()*img.shape[0]), int(rndm()*img.shape[0]), int(
+                rndm()*img.shape[1]), int(rndm()*img.shape[1])
+            img = np.pad(img, ((max(0, a), max(0, b)),
+                               (max(0, c), max(0, d)), (0, 0)))
+            img = MarginProcessor.unpad(img, ((min(0, a), min(0, b)),
+                                              (min(0, c), min(0, d)), (0, 0)))
+        return img
 
-    if random() <= blur_probability:
-        if not blur_high:
-            blur_high = blur_low
-        if not blur_low:
-            blur_low = blur_high
-        blur_low, blur_high = int(blur_low*min(
-            wm_shape[0], wm_shape[1])), int(blur_high*min(wm_shape[0], wm_shape[1]))
-        blur = randint(blur_low, blur_high)
-        image = cv2.blur(image, (blur, blur))
+    @staticmethod
+    def unpad(x, pad_width):
+        slices = []
+        for c in pad_width:
+            e = None if c[1] == 0 else c[1]
+            slices.append(slice(-c[0], e))
+        return x[tuple(slices)]
 
-    return image
+
+class BlurProcessor(Processor):
+    def __init__(self, args):
+        self.low = args.blur_low
+        self.high = args.blur_high
+        if not self.low:
+            self.low = self.high
+        if not self.high:
+            self.high = self.low
+        self.probability = args.blur_probability
+
+    def process(self, img, wm_shape):
+        if random() <= self.probability:
+            blur_low, blur_high = int(self.low*min(
+                wm_shape[0], wm_shape[1])), int(self.high*min(wm_shape[0], wm_shape[1]))
+            blur = randint(blur_low, blur_high)
+            img = cv2.blur(img, (blur, blur))
+        return img
 
 
 def get_random_solid_background(im):
@@ -130,12 +171,14 @@ def overlay_transparent(background, overlay):
     full_mask = np.full(background.shape, 0.)
     full_mask[:h, :w] = mask
     full_mask *= 255
-    return background, full_mask
+    return background.astype('uint8'), full_mask
 
 
 if __name__ == '__main__':
     args = parser.parse_args()
+
     im = cv2.imread(args.path, cv2.IMREAD_UNCHANGED)
+    generator = ImagePermutationGenerator(im, args)
 
     os.makedirs(args.out_dir, exist_ok=True)
     os.makedirs(args.mask_out_dir, exist_ok=True)
@@ -144,13 +187,11 @@ if __name__ == '__main__':
     solid_bg_number = args.number - photo_bg_number
 
     for i in range(args.number):
-        cutout = get_random_cutout(im, args.scale_low, args.scale_high,
-                                   args.margin_low, args.margin_high, args.margins_equal, args.blur_probability, args.blur_low, args.blur_high)
+        cutout = generator.next()
         background = get_random_solid_background(
             cutout) if i < solid_bg_number else get_random_photo_background(cutout)
-        added_image, mask = overlay_transparent(background, cutout)
-        added_image = added_image.astype('uint8')
+        combined_image, mask = overlay_transparent(background, cutout)
 
-        cv2.imwrite(f'{args.out_dir}/{i}.jpg', added_image)
+        cv2.imwrite(f'{args.out_dir}/{i}.jpg', combined_image)
         if args.mask:
             cv2.imwrite(f'{args.mask_out_dir}/{i}.png', mask)
