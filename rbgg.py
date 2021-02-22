@@ -5,6 +5,7 @@ import numpy as np
 import os
 import argparse
 import colorsys
+import urllib.request
 
 parser = argparse.ArgumentParser(
     description='Generating random backgrounds for a given image.')
@@ -12,6 +13,8 @@ parser.add_argument('path', help='path to an image to process')
 parser.add_argument('-o', '--out-dir', default='out', help='output directory')
 parser.add_argument('-n', '--number', type=int, default=2,
                     help='number of images to generate')
+parser.add_argument('-p', '--photos', type=float, default=0.,
+                    help='percentage of images to have photographs as background')
 parser.add_argument('-m', '--mask', action="store_true",
                     help='whether to save masks')
 parser.add_argument('-mo', '--mask-out-dir', default='mask',
@@ -90,6 +93,13 @@ def get_random_solid_background(im):
     return np.full((im.shape[0], im.shape[1], 3), random_color.astype(np.int32))
 
 
+def get_random_photo_background(im):
+    with urllib.request.urlopen(f"https://picsum.photos/{im.shape[1]}/{im.shape[0]}") as url:
+        image_array = np.asarray(bytearray(url.read()), dtype="uint8")
+        image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+        return image
+
+
 def overlay_transparent(background, overlay):
     bg_height, bg_width = background.shape[0], background.shape[1]
     h, w = overlay.shape[0], overlay.shape[1]
@@ -130,10 +140,14 @@ if __name__ == '__main__':
     os.makedirs(args.out_dir, exist_ok=True)
     os.makedirs(args.mask_out_dir, exist_ok=True)
 
+    photo_bg_number = int(100*args.photos*args.number)
+    solid_bg_number = args.number - photo_bg_number
+
     for i in range(args.number):
         cutout = get_random_cutout(im, args.scale_low, args.scale_high,
                                    args.margin_low, args.margin_high, args.margins_equal, args.blur_probability, args.blur_low, args.blur_high)
-        background = get_random_solid_background(cutout)
+        background = get_random_solid_background(
+            cutout) if i < solid_bg_number else get_random_photo_background(cutout)
         added_image, mask = overlay_transparent(background, cutout)
         added_image = added_image.astype('uint8')
 
