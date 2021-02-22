@@ -141,7 +141,7 @@ def get_random_photo_background(im):
         return image
 
 
-def overlay_transparent(background, overlay):
+def combine(background, overlay):
     bg_height, bg_width = background.shape[0], background.shape[1]
     h, w = overlay.shape[0], overlay.shape[1]
 
@@ -152,16 +152,6 @@ def overlay_transparent(background, overlay):
     if h > bg_height:
         h = bg_height
         overlay = overlay[:h]
-
-    if overlay.shape[2] < 4:
-        overlay = np.concatenate(
-            [
-                overlay,
-                np.ones((overlay.shape[0], overlay.shape[1],
-                         1), dtype=overlay.dtype) * 255
-            ],
-            axis=2,
-        )
 
     overlay_image = overlay[..., :3]
     mask = overlay[..., 3:] / 255.0
@@ -187,10 +177,10 @@ if __name__ == '__main__':
     solid_bg_number = args.number - photo_bg_number
 
     for i in range(args.number):
-        cutout = generator.next()
+        overlay = generator.next()
         background = get_random_solid_background(
-            cutout) if i < solid_bg_number else get_random_photo_background(cutout)
-        combined_image, mask = overlay_transparent(background, cutout)
+            overlay) if i < solid_bg_number else get_random_photo_background(overlay)
+        combined_image, mask = combine(background, overlay)
 
         cv2.imwrite(f'{args.out_dir}/{i}.jpg', combined_image)
         if args.mask:
