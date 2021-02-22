@@ -21,7 +21,7 @@ parser.add_argument('-mo', '--mask-out-dir', default='mask',
                     help='mask output directory')
 parser.add_argument('--margin-low', type=float, help='margin low')
 parser.add_argument('--margin-high', type=float, help='margin high')
-parser.add_argument('--margins-equal', action='store_true',
+parser.add_argument('--margin-equal', action='store_true',
                     help='equal margins')
 parser.add_argument('--scale-low', type=float, help='scale low')
 parser.add_argument('--scale-high', type=float, help='scale high')
@@ -80,24 +80,16 @@ class MarginProcessor(Processor):
             self.low = self.high
         if not self.high:
             self.high = self.low
-        self.equal = args.margins_equal
+        self.equal = args.margin_equal
 
     def process(self, img):
-        if(self.equal):
-            margin = unform(self.low/2, self.high/2)
-            a, b, c, d = int(margin*img.shape[0]), int(margin*img.shape[0]), int(
-                margin*img.shape[1]), int(margin*img.shape[1])
-            img = np.pad(img, ((max(0, a), max(0, b)),
-                               (max(0, c), max(0, d)), (0, 0)))
-            img = MarginProcessor.unpad(img, ((a, b), (c, d), (0, 0)))
-        else:
-            def rndm(): return uniform(self.low/2, self.high/2)
-            a, b, c, d = int(rndm()*img.shape[0]), int(rndm()*img.shape[0]), int(
-                rndm()*img.shape[1]), int(rndm()*img.shape[1])
-            img = np.pad(img, ((max(0, a), max(0, b)),
-                               (max(0, c), max(0, d)), (0, 0)))
-            img = MarginProcessor.unpad(img, ((min(0, a), min(0, b)),
-                                              (min(0, c), min(0, d)), (0, 0)))
+        def rndm(): return uniform(self.low, self.high)
+        margins = [rndm()]*4 if self.equal else [rndm() for _ in range(4)]
+        a, b, c, d = [int(x*img.shape[:2][i//2])for i, x in enumerate(margins)]
+        img = np.pad(img, ((max(0, a), max(0, b)),
+                           (max(0, c), max(0, d)), (0, 0)))
+        img = MarginProcessor.unpad(
+            img, ((min(0, a), min(0, b)), (min(0, c), min(0, d)), (0, 0)))
         return img
 
     @staticmethod
