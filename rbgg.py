@@ -140,7 +140,7 @@ if __name__ == '__main__':
     os.makedirs(args.out_dir, exist_ok=True)
     os.makedirs(args.mask_out_dir, exist_ok=True)
 
-    photo_bg_number = int(100*args.photos*args.number)
+    photo_bg_number = int(args.photos*args.number)
     solid_bg_number = args.number - photo_bg_number
 
     for i in range(args.number):
