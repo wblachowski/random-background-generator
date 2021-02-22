@@ -19,18 +19,19 @@ parser.add_argument('-m', '--mask', action='store_true',
                     help='whether to save masks')
 parser.add_argument('-mo', '--mask-out-dir', default='mask',
                     help='mask output directory')
-parser.add_argument('--margin-low', type=float, help='margin low')
-parser.add_argument('--margin-high', type=float, help='margin high')
+parser.add_argument('--margin-low', type=float, help='lower limit for margins')
+parser.add_argument('--margin-high', type=float,
+                    help='upper limit for margins')
 parser.add_argument('--margin-equal', action='store_true',
-                    help='equal margins')
-parser.add_argument('--scale-low', type=float, help='scale low')
-parser.add_argument('--scale-high', type=float, help='scale high')
+                    help='whether to keep margins equal')
+parser.add_argument('--scale-low', type=float, help='lower limit for scaling')
+parser.add_argument('--scale-high', type=float, help='upper limit for scaling')
 parser.add_argument('--blur-probability', type=float,
                     default=0., help='blur probability')
 parser.add_argument('--blur-low', type=float, default=0.05,
-                    help='blur strength low')
+                    help='lower limit for blurring strength')
 parser.add_argument('--blur-high', type=float,
-                    help='blur strength high')
+                    help='upper limit for blurring strength')
 
 
 class ImagePermutationGenerator:
