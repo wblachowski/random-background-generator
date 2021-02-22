@@ -56,12 +56,14 @@ class ImagePermutationGenerator:
 
 class Processor:
     def __init__(self, low, high):
+        if high and not low:
+            low = high
+            low, high = min(low, high), max(low, high)
+        elif low and not high:
+            high = low
+            low, high = min(low, high), max(low, high)
         self.low = low
         self.high = high
-        if not self.low:
-            self.low = self.high
-        if not self.high:
-            self.high = self.low
 
     def should_process(self):
         return self.low is not None or self.high is not None
