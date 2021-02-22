@@ -54,18 +54,21 @@ class ImagePermutationGenerator:
 
 
 class Processor:
+    def __init__(self, low, high):
+        self.low = low
+        self.high = high
+        if not self.low:
+            self.low = self.high
+        if not self.high:
+            self.high = self.low
+
     def should_process(self):
         return self.low is not None or self.high is not None
 
 
 class ScaleProcessor(Processor):
     def __init__(self, args):
-        self.low = args.scale_low
-        self.high = args.scale_high
-        if not self.low:
-            self.low = self.high
-        if not self.high:
-            self.high = self.low
+        super().__init__(args.scale_low, args.scale_high)
 
     def process(self, img):
         scale = uniform(self.low, self.high)
@@ -74,12 +77,7 @@ class ScaleProcessor(Processor):
 
 class MarginProcessor(Processor):
     def __init__(self, args):
-        self.low = args.margin_low
-        self.high = args.margin_high
-        if not self.low:
-            self.low = self.high
-        if not self.high:
-            self.high = self.low
+        super().__init__(args.margin_low, args.margin_high)
         self.equal = args.margin_equal
 
     def process(self, img):
@@ -103,12 +101,7 @@ class MarginProcessor(Processor):
 
 class BlurProcessor(Processor):
     def __init__(self, args):
-        self.low = args.blur_low
-        self.high = args.blur_high
-        if not self.low:
-            self.low = self.high
-        if not self.high:
-            self.high = self.low
+        super().__init__(args.blur_low, args.blur_high)
         self.probability = args.blur_probability
 
     def process(self, img, wm_shape):
@@ -140,17 +133,19 @@ def combine(background, overlay):
     return result.astype('uint8'), mask*255
 
 
+def create_output_dirs(args):
+    os.makedirs(args.out_dir, exist_ok=True)
+    if args.mask:
+        os.makedirs(args.mask_out_dir, exist_ok=True)
+
+
 if __name__ == '__main__':
     args = parser.parse_args()
-
+    create_output_dirs(args)
     im = cv2.imread(args.path, cv2.IMREAD_UNCHANGED)
     generator = ImagePermutationGenerator(im, args)
 
-    os.makedirs(args.out_dir, exist_ok=True)
-    os.makedirs(args.mask_out_dir, exist_ok=True)
-
-    photo_bg_number = int(args.photos*args.number)
-    solid_bg_number = args.number - photo_bg_number
+    solid_bg_number = args.number - int(args.photos*args.number)
 
     for i in range(args.number):
         overlay = generator.next()
