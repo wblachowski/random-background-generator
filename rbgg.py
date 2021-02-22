@@ -4,7 +4,7 @@ import random
 import numpy as np
 import os
 import argparse
-
+import colorsys
 
 parser = argparse.ArgumentParser(
     description='Generating random backgrounds for a given image.')
@@ -83,9 +83,9 @@ def get_random_cutout(image, scale_low, scale_high, margin_low, margin_high, mar
 
 
 def get_random_solid_background(im):
-    random_color = [random.randrange(
-        256), random.randrange(256), random.randrange(256)]
-    return np.full((im.shape[0], im.shape[1], 3), random_color)
+    random_color = np.array(colorsys.hsv_to_rgb(
+        random.random(), random.random(), random.random()))*255
+    return np.full((im.shape[0], im.shape[1], 3), random_color.astype(np.int32))
 
 
 def overlay_transparent(background, overlay, x, y):
