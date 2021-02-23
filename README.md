@@ -18,7 +18,7 @@ Use `--scale-low` and `--scale-high` to specify scaling of the input image. The 
 ![Scaling](/assets/scale.png)
 
 ## Margin
-Use `--margin-low` and `--margin-high` to specify the range of margins. Margin for each side will be drawn randomly from a uniform distrubtion between the two values. If `--margin-equal` flag is specified, the margin is random but the same for all four sides. If only a single value is specified (either `low` or `high`), the margin is contant.
+Use `--margin-low` and `--margin-high` to specify the range of margins. Margin for each side will be drawn randomly from a uniform distrubtion between the two values. If `--margin-equal` flag is specified, the margin the same for all four sides. If only a single value is specified (either `low` or `high`), the margin is contant.
 
 You can specify negative values as well to crop out a part of the input image.
 
