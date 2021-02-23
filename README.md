@@ -6,7 +6,7 @@
 ## Mask
 Use `--mask` to save masks along the final images. You can specify the target directory for masks using `--mask-out-dir`.
 
-For instance, for these images:
+For instance, for the following output images:
 ![Final imgs](/assets/mask_org.png)
 
 The masks are:
