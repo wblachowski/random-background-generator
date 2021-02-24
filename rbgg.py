@@ -7,6 +7,8 @@ from random import randint, uniform, random
 from urllib.request import urlopen
 from multiprocessing import cpu_count, Pool
 from itertools import repeat
+import asyncio
+import aiohttp
 
 parser = argparse.ArgumentParser(
     description='Generating random backgrounds for a given image.')
@@ -123,9 +125,11 @@ def get_random_solid_background(shape):
     return np.full((shape[0], shape[1], 3), random_color.astype(np.int32))
 
 
-def get_random_photo_background(shape):
-    with urlopen(f'https://picsum.photos/{shape[1]}/{shape[0]}') as url:
-        image_array = np.asarray(bytearray(url.read()), dtype='uint8')
+async def get_random_photo_background(shape):
+    url = f'https://picsum.photos/{shape[1]}/{shape[0]}'
+    async with aiohttp.ClientSession() as session, session.get(url=url) as response:
+        resp = await response.read()
+        image_array = np.asarray(bytearray(resp), dtype='uint8')
         image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
         return image
 
@@ -143,21 +147,32 @@ def create_output_dirs(args):
         os.makedirs(args.mask_out_dir, exist_ok=True)
 
 
-def generate_imgs(ids, solid_bg_number, generator, args):
-    for i in ids:
-        overlay = generator.next()
-        shape = overlay.shape
-        background = get_random_solid_background(
-            shape) if i < solid_bg_number else get_random_photo_background(shape)
+async def generate_imgs(ids, solid_bg_number, generator, args):
+    overlays = [generator.next() for _ in ids]
+    overlays_solid = []
+    overlays_photo = []
+    for i, id in enumerate(ids):
+        if id < solid_bg_number:
+            overlays_solid.append(overlays[i])
+        else:
+            overlays_photo.append(overlays[i])
+    backgrounds_solid = [get_random_solid_background(
+        o.shape) for o in overlays_solid]
+    backgrounds_photo = await asyncio.gather(*[get_random_photo_background(
+        o.shape) for o in overlays_photo])
+    for i, background, overlay in zip(ids, backgrounds_solid+backgrounds_photo, overlays_solid+overlays_photo):
         combined_image, mask = combine(background, overlay)
-
         cv2.imwrite(f'{args.out_dir}/{i}.jpg', combined_image)
         if args.mask:
             cv2.imwrite(f'{args.mask_out_dir}/{i}.png', mask)
 
 
+def run(ids, solid_bg_number, generator, args):
+    asyncio.run(generate_imgs(ids, solid_bg_number, generator, args))
+
+
 def run_singlethread(solid_bg_number, generator, args):
-    generate_imgs(range(args.number), solid_bg_number, generator, args)
+    run(range(args.number), solid_bg_number, generator, args)
 
 
 def run_multithread(solid_bg_number, generator, args):
@@ -165,7 +180,7 @@ def run_multithread(solid_bg_number, generator, args):
         parts = np.array_split(range(args.number), cpu_count())
         data = zip(parts, repeat(solid_bg_number),
                    repeat(generator), repeat(args))
-        pool.starmap(generate_imgs, data)
+        pool.starmap(run, data)
 
 
 if __name__ == '__main__':
