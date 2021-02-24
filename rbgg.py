@@ -149,18 +149,11 @@ def create_output_dirs(args):
 
 async def generate_imgs(ids, solid_bg_number, generator, args):
     overlays = [generator.next() for _ in ids]
-    overlays_solid = []
-    overlays_photo = []
-    for i, id in enumerate(ids):
-        if id < solid_bg_number:
-            overlays_solid.append(overlays[i])
-        else:
-            overlays_photo.append(overlays[i])
     backgrounds_solid = [get_random_solid_background(
-        o.shape) for o in overlays_solid]
+        overlays[i].shape) for i, id in enumerate(ids) if id < solid_bg_number]
     backgrounds_photo = await asyncio.gather(*[get_random_photo_background(
-        o.shape) for o in overlays_photo])
-    for i, background, overlay in zip(ids, backgrounds_solid+backgrounds_photo, overlays_solid+overlays_photo):
+        overlays[i].shape) for i, id in enumerate(ids) if id >= solid_bg_number])
+    for i, background, overlay in zip(ids, backgrounds_solid+backgrounds_photo, overlays):
         combined_image, mask = combine(background, overlay)
         cv2.imwrite(f'{args.out_dir}/{i}.jpg', combined_image)
         if args.mask:
