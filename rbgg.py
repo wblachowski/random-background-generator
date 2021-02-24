@@ -59,10 +59,10 @@ class ImagePermutationGenerator:
 
 class Processor:
     def __init__(self, low, high):
-        if high and not low:
+        if high is not None and low is None:
             low = high
             low, high = min(low, high), max(low, high)
-        elif low and not high:
+        elif low is not None and high is None:
             high = low
             low, high = min(low, high), max(low, high)
         self.low = low
@@ -78,7 +78,7 @@ class ScaleProcessor(Processor):
 
     def process(self, img):
         scale = uniform(self.low, self.high)
-        return cv2.resize(img, (int(img.shape[1]*scale), int(img.shape[0]*scale)))
+        return cv2.resize(img, (int(max(1, img.shape[1]*scale)), max(1, int(img.shape[0]*scale))))
 
 
 class MarginProcessor(Processor):
@@ -87,7 +87,7 @@ class MarginProcessor(Processor):
         self.equal = args.margin_equal
 
     def process(self, img):
-        def rndm(): return uniform(self.low, self.high)
+        def rndm(): return max(-0.49, uniform(self.low, self.high))
         margins = [rndm()]*4 if self.equal else [rndm() for _ in range(4)]
         a, b, c, d = [int(x*img.shape[:2][i//2])for i, x in enumerate(margins)]
         img = np.pad(img, ((max(0, a), max(0, b)),
@@ -114,7 +114,7 @@ class BlurProcessor(Processor):
         if random() <= self.probability:
             blur_low, blur_high = int(self.low*min(
                 wm_shape[0], wm_shape[1])), int(self.high*min(wm_shape[0], wm_shape[1]))
-            blur = randint(blur_low, blur_high)
+            blur = max(1, randint(blur_low, blur_high))
             img = cv2.blur(img, (blur, blur))
         return img
 
