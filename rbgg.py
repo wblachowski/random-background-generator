@@ -5,6 +5,8 @@ import argparse
 import colorsys
 from random import randint, uniform, random
 from urllib.request import urlopen
+from multiprocessing import cpu_count, Pool
+from itertools import repeat
 
 parser = argparse.ArgumentParser(
     description='Generating random backgrounds for a given image.')
@@ -141,15 +143,8 @@ def create_output_dirs(args):
         os.makedirs(args.mask_out_dir, exist_ok=True)
 
 
-if __name__ == '__main__':
-    args = parser.parse_args()
-    create_output_dirs(args)
-    im = cv2.imread(args.path, cv2.IMREAD_UNCHANGED)
-    generator = ImagePermutationGenerator(im, args)
-
-    solid_bg_number = args.number - int(args.photos*args.number)
-
-    for i in range(args.number):
+def generate_imgs(ids, solid_bg_number, generator, args):
+    for i in ids:
         overlay = generator.next()
         shape = overlay.shape
         background = get_random_solid_background(
@@ -159,3 +154,29 @@ if __name__ == '__main__':
         cv2.imwrite(f'{args.out_dir}/{i}.jpg', combined_image)
         if args.mask:
             cv2.imwrite(f'{args.mask_out_dir}/{i}.png', mask)
+
+
+def run_singlethread(solid_bg_number, generator, args):
+    generate_imgs(range(args.number), solid_bg_number, generator, args)
+
+
+def run_multithread(solid_bg_number, generator, args):
+    with Pool() as pool:
+        parts = np.array_split(range(args.number), cpu_count())
+        data = zip(parts, repeat(solid_bg_number),
+                   repeat(generator), repeat(args))
+        pool.starmap(generate_imgs, data)
+
+
+if __name__ == '__main__':
+    args = parser.parse_args()
+    create_output_dirs(args)
+    im = cv2.imread(args.path, cv2.IMREAD_UNCHANGED)
+    generator = ImagePermutationGenerator(im, args)
+
+    solid_bg_number = args.number - int(args.photos*args.number)
+
+    if args.number < 100:
+        run_singlethread(solid_bg_number, generator, args)
+    else:
+        run_multithread(solid_bg_number, generator, args)
