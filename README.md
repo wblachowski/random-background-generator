@@ -6,6 +6,12 @@ A python script adding random backgrounds to a given image. Two types of backgro
 
 The script was created to produce datasets for the background removal task. Data produced can be directly used, for instance, to train a U2-Net neural network.
 
+## Installation
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Usage
 
 ```bash
