@@ -48,7 +48,8 @@ optional arguments:
                         probability of blurring an image (should be between 0.0 and 1.0). Default: 0.0
   --blur-low BLUR_LOW   lower limit for relative blurring strength (should be between 0.0 and 1.0). Default: 0.05
   --blur-high BLUR_HIGH
-                        upper limit for relative blurring strength (should be between 0.0 and 1.0)```
+                        upper limit for relative blurring strength (should be between 0.0 and 1.0)
+```
 
 ## Background types
 
