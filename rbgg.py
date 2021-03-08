@@ -9,32 +9,37 @@ from multiprocessing import cpu_count, Pool
 from itertools import repeat
 import asyncio
 import aiohttp
+import signal
 
 parser = argparse.ArgumentParser(
     description='Generating random backgrounds for a given image.')
 parser.add_argument('path', help='path to an image to process')
-parser.add_argument('-o', '--out-dir', default='out', help='output directory')
+parser.add_argument('-o', '--out-dir', default='out',
+                    help='output directory. Default: out')
 parser.add_argument('-n', '--number', type=int, default=100,
-                    help='number of images to generate')
+                    help='number of images to generate. Default: 100')
 parser.add_argument('-p', '--photos', type=float, default=0.,
-                    help='percentage of images to have photographs as background')
+                    help='percentage of images to have photographs as background (should be between 0.0 and 1.0). Default: 0.0')
 parser.add_argument('-m', '--mask', action='store_true',
-                    help='whether to save masks')
+                    help='whether to save masks. Default: false')
 parser.add_argument('-mo', '--mask-out-dir', default='mask',
-                    help='mask output directory')
-parser.add_argument('--scale-low', type=float, help='lower limit for scaling')
-parser.add_argument('--scale-high', type=float, help='upper limit for scaling')
-parser.add_argument('--margin-low', type=float, help='lower limit for margins')
+                    help='mask output directory. Default: mask')
+parser.add_argument('--scale-low', type=float,
+                    help='lower limit for relative scaling (should be higher than 0.0)')
+parser.add_argument('--scale-high', type=float,
+                    help='upper limit for relative scaling (should be higher than 0.0)')
+parser.add_argument('--margin-low', type=float,
+                    help='lower limit for relative margins (should be higher than -0.5)')
 parser.add_argument('--margin-high', type=float,
-                    help='upper limit for margins')
+                    help='upper limit for relative margins (should be higher than -0.5)')
 parser.add_argument('--margin-equal', action='store_true',
-                    help='whether to keep margins equal')
+                    help='whether to keep margins equal. Default: false')
 parser.add_argument('--blur-probability', type=float,
-                    default=0., help='blur probability')
+                    default=0., help='probability of blurring an image (should be between 0.0 and 1.0). Default: 0.0')
 parser.add_argument('--blur-low', type=float, default=0.05,
-                    help='lower limit for blurring strength')
+                    help='lower limit for relative blurring strength (should be between 0.0 and 1.0). Default: 0.05')
 parser.add_argument('--blur-high', type=float,
-                    help='upper limit for blurring strength')
+                    help='upper limit for relative blurring strength (should be between 0.0 and 1.0)')
 
 
 class ImagePermutationGenerator:
@@ -148,16 +153,19 @@ def create_output_dirs(args):
 
 
 async def generate_imgs(ids, solid_bg_number, generator, args):
-    overlays = [generator.next() for _ in ids]
-    backgrounds_solid = [get_random_solid_background(
-        overlays[i].shape) for i, id in enumerate(ids) if id < solid_bg_number]
-    backgrounds_photo = await asyncio.gather(*[get_random_photo_background(
-        overlays[i].shape) for i, id in enumerate(ids) if id >= solid_bg_number])
-    for i, background, overlay in zip(ids, backgrounds_solid+backgrounds_photo, overlays):
-        combined_image, mask = combine(background, overlay)
-        cv2.imwrite(f'{args.out_dir}/{i}.jpg', combined_image)
-        if args.mask:
-            cv2.imwrite(f'{args.mask_out_dir}/{i}.png', mask)
+    try:
+        overlays = [generator.next() for _ in ids]
+        backgrounds_solid = [get_random_solid_background(
+            overlays[i].shape) for i, id in enumerate(ids) if id < solid_bg_number]
+        backgrounds_photo = await asyncio.gather(*[get_random_photo_background(
+            overlays[i].shape) for i, id in enumerate(ids) if id >= solid_bg_number])
+        for i, background, overlay in zip(ids, backgrounds_solid+backgrounds_photo, overlays):
+            combined_image, mask = combine(background, overlay)
+            cv2.imwrite(f'{args.out_dir}/{i}.jpg', combined_image)
+            if args.mask:
+                cv2.imwrite(f'{args.mask_out_dir}/{i}.png', mask)
+    except KeyboardInterrupt:
+        return
 
 
 def run(ids, solid_bg_number, generator, args):
@@ -169,11 +177,21 @@ def run_singlethread(solid_bg_number, generator, args):
 
 
 def run_multithread(solid_bg_number, generator, args):
-    with Pool() as pool:
-        parts = np.array_split(range(args.number), cpu_count())
-        data = zip(parts, repeat(solid_bg_number),
-                   repeat(generator), repeat(args))
-        pool.starmap(run, data)
+    original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    pool = Pool()
+    signal.signal(signal.SIGINT, original_sigint_handler)
+    parts = np.array_split(range(args.number), cpu_count())
+    data = zip(parts, repeat(solid_bg_number),
+               repeat(generator), repeat(args))
+    try:
+        res = pool.starmap(run, data)
+        pool.close()
+    except Exception:
+        print("Caugh KeyboardInterrupt, terminating workers")
+        pool.terminate()
+    finally:
+        print("joining")
+        pool.join()
 
 
 if __name__ == '__main__':
