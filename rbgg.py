@@ -4,12 +4,10 @@ import os
 import argparse
 import colorsys
 from random import randint, uniform, random
-from urllib.request import urlopen
 from multiprocessing import cpu_count, Pool
 from itertools import repeat
 import asyncio
 import aiohttp
-import signal
 
 parser = argparse.ArgumentParser(
     description='Generating random backgrounds for a given image.')
