@@ -22,21 +22,21 @@ parser.add_argument('-m', '--mask', action='store_true',
                     help='whether to save masks. Default: false')
 parser.add_argument('-mo', '--mask-out-dir', default='mask',
                     help='mask output directory. Default: mask')
-parser.add_argument('--scale-low', type=float,
+parser.add_argument('-sl', '--scale-low', type=float,
                     help='lower limit for relative scaling (should be higher than 0.0)')
-parser.add_argument('--scale-high', type=float,
+parser.add_argument('-sh', '--scale-high', type=float,
                     help='upper limit for relative scaling (should be higher than 0.0)')
-parser.add_argument('--margin-low', type=float,
+parser.add_argument('-ml', '--margin-low', type=float,
                     help='lower limit for relative margins (should be higher than -0.5)')
-parser.add_argument('--margin-high', type=float,
+parser.add_argument('-mh', '--margin-high', type=float,
                     help='upper limit for relative margins (should be higher than -0.5)')
-parser.add_argument('--margin-equal', action='store_true',
+parser.add_argument('-me', '--margin-equal', action='store_true',
                     help='whether to keep margins equal. Default: false')
-parser.add_argument('--blur-probability', type=float,
+parser.add_argument('-bp', '--blur-probability', type=float,
                     default=0., help='probability of blurring an image (should be between 0.0 and 1.0). Default: 0.0')
-parser.add_argument('--blur-low', type=float, default=0.05,
+parser.add_argument('-bl', '--blur-low', type=float, default=0.05,
                     help='lower limit for relative blurring strength (should be between 0.0 and 1.0). Default: 0.05')
-parser.add_argument('--blur-high', type=float,
+parser.add_argument('-bh', '--blur-high', type=float,
                     help='upper limit for relative blurring strength (should be between 0.0 and 1.0)')
 
 

@@ -35,19 +35,20 @@ optional arguments:
   -m, --mask            whether to save masks. Default: false
   -mo MASK_OUT_DIR, --mask-out-dir MASK_OUT_DIR
                         mask output directory. Default: mask
-  --scale-low SCALE_LOW
+  -sl SCALE_LOW, --scale-low SCALE_LOW
                         lower limit for relative scaling (should be higher than 0.0)
-  --scale-high SCALE_HIGH
+  -sh SCALE_HIGH, --scale-high SCALE_HIGH
                         upper limit for relative scaling (should be higher than 0.0)
-  --margin-low MARGIN_LOW
+  -ml MARGIN_LOW, --margin-low MARGIN_LOW
                         lower limit for relative margins (should be higher than -0.5)
-  --margin-high MARGIN_HIGH
+  -mh MARGIN_HIGH, --margin-high MARGIN_HIGH
                         upper limit for relative margins (should be higher than -0.5)
-  --margin-equal        whether to keep margins equal. Default: false
-  --blur-probability BLUR_PROBABILITY
+  -me, --margin-equal   whether to keep margins equal. Default: false
+  -bp BLUR_PROBABILITY, --blur-probability BLUR_PROBABILITY
                         probability of blurring an image (should be between 0.0 and 1.0). Default: 0.0
-  --blur-low BLUR_LOW   lower limit for relative blurring strength (should be between 0.0 and 1.0). Default: 0.05
-  --blur-high BLUR_HIGH
+  -bl BLUR_LOW, --blur-low BLUR_LOW
+                        lower limit for relative blurring strength (should be between 0.0 and 1.0). Default: 0.05
+  -bh BLUR_HIGH, --blur-high BLUR_HIGH
                         upper limit for relative blurring strength (should be between 0.0 and 1.0)
 ```
 
