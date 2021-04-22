@@ -11,7 +11,7 @@ import aiohttp
 
 parser = argparse.ArgumentParser(
     description='Generating random backgrounds for a given image.')
-parser.add_argument('path', help='path to an image to process')
+parser.add_argument('path', help='path to the image to process')
 parser.add_argument('-o', '--out-dir', default='out',
                     help='output directory. Default: out')
 parser.add_argument('-n', '--number', type=int, default=100,
