@@ -22,7 +22,7 @@ Arguments:
 
 ```
 positional arguments:
-  path                  path to an image to process
+  path                  path to the image to process
 
 optional arguments:
   -h, --help            show this help message and exit
