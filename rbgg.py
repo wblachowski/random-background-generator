@@ -39,7 +39,7 @@ parser.add_argument('-bl', '--blur-low', type=float, default=0.05,
 parser.add_argument('-bh', '--blur-high', type=float,
                     help='upper limit for relative blurring strength (should be between 0.0 and 1.0)')
 parser.add_argument('--single-core', action='store_true',
-                    help='Run on single core. Default: false')
+                    help='Run on a single CPU core. Default: false')
 
 
 class ImagePermutationGenerator:

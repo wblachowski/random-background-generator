@@ -50,7 +50,7 @@ optional arguments:
                         lower limit for relative blurring strength (should be between 0.0 and 1.0). Default: 0.05
   -bh BLUR_HIGH, --blur-high BLUR_HIGH
                         upper limit for relative blurring strength (should be between 0.0 and 1.0)
-  --single-core         Run on single core. Default: false
+  --single-core         Run on a single CPU core. Default: false
 ```
 
 ## Background types
