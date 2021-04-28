@@ -38,6 +38,8 @@ parser.add_argument('-bl', '--blur-low', type=float, default=0.05,
                     help='lower limit for relative blurring strength (should be between 0.0 and 1.0). Default: 0.05')
 parser.add_argument('-bh', '--blur-high', type=float,
                     help='upper limit for relative blurring strength (should be between 0.0 and 1.0)')
+parser.add_argument('--single-core', action='store_true',
+                    help='Run on single core. Default: false')
 
 
 class ImagePermutationGenerator:
@@ -187,7 +189,7 @@ if __name__ == '__main__':
 
     solid_bg_number = args.number - int(args.photos*args.number)
 
-    if args.number < 100:
+    if args.single_core or args.number <= 100:
         run_singlethread(solid_bg_number, generator, args)
     else:
         run_multithread(solid_bg_number, generator, args)

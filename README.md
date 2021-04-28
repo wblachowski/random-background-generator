@@ -50,6 +50,7 @@ optional arguments:
                         lower limit for relative blurring strength (should be between 0.0 and 1.0). Default: 0.05
   -bh BLUR_HIGH, --blur-high BLUR_HIGH
                         upper limit for relative blurring strength (should be between 0.0 and 1.0)
+  --single-core         Run on single core. Default: false
 ```
 
 ## Background types
@@ -105,3 +106,7 @@ Use `--blur-probability` to set a probability of blurring the final image (the d
 The blurring strength can take values between 0.0 and 1.0, with 0.0 meaning no blur at all, and 1.0 meaning the maximal blur possible.
 
 ![Blur](/assets/blur.png)
+
+## Multithreading
+
+Use `--single-core` to run on a single CPU core. Otherwise, the tool uses multithreading if the number of images to generate is larger than 100 (for smaller number of images the multithreading overhead is greater than the benefits - although the exact number is machine-specific). The number of threads is set to the number of CPU cores available.
