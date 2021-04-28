@@ -15,7 +15,7 @@ pip install -r requirements.txt
 ## Usage
 
 ```bash
-$ py rbgg.py [-h] [-o OUT_DIR] [-n NUMBER] [-p PHOTOS] [-m] [-mo MASK_OUT_DIR] [--scale-low SCALE_LOW] [--scale-high SCALE_HIGH] [--margin-low MARGIN_LOW] [--margin-high MARGIN_HIGH] [--margin-equal] [--blur-probability BLUR_PROBABILITY] [--blur-low BLUR_LOW] [--blur-high BLUR_HIGH] path
+$ py rbgg.py [-h] [-o OUT_DIR] [-n NUMBER] [-p PHOTOS] [-m] [-mo MASK_OUT_DIR] [-sl SCALE_LOW] [-sh SCALE_HIGH] [-ml MARGIN_LOW] [-mh MARGIN_HIGH] [-me] [-bp BLUR_PROBABILITY] [-bl BLUR_LOW] [-bh BLUR_HIGH] [--single-core] path
 ```
 
 Arguments:
