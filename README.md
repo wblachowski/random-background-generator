@@ -2,7 +2,7 @@
 
 ![grid](/assets/grid.png)
 
-A python script adding random backgrounds to a given image. Two types of backgrounds are supported - solid color and photographs. A set of transformations can be applied to the input image prior to it being superimposed over the final background. Together with the final images, the script can produce corresponding mask images.
+A python script adding random backgrounds to a PNG image. Two types of backgrounds are supported - solid color and photographs. A set of transformations can be applied to the input image prior to it being superimposed over the final background. Together with the final images, the script can produce corresponding mask images.
 
 The script was created to produce datasets for the background removal task. Data produced can be directly used, for instance, to train a U2-Net neural network.
 
