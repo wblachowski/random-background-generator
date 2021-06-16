@@ -152,6 +152,13 @@ def create_output_dirs(args):
         os.makedirs(args.mask_out_dir, exist_ok=True)
 
 
+def read_img(path):
+    im = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    if im.shape[-1] == 3:
+        im = np.insert(im, 3, values=255, axis=2)
+    return im
+
+
 async def generate_imgs(ids, solid_bg_number, generator, args):
     overlays = [generator.next() for _ in ids]
     backgrounds_solid = [get_random_solid_background(
@@ -184,7 +191,7 @@ def run_multithread(solid_bg_number, generator, args):
 if __name__ == '__main__':
     args = parser.parse_args()
     create_output_dirs(args)
-    im = cv2.imread(args.path, cv2.IMREAD_UNCHANGED)
+    im = read_img(args.path)
     generator = ImagePermutationGenerator(im, args)
 
     solid_bg_number = args.number - int(args.photos*args.number)
